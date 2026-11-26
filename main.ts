@@ -25,11 +25,16 @@ if (text.includes("\n") || text.includes("\r")) {
   process.exit(1);
 }
 
-const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output/entry.txt";
-mkdirSync(dirname(outDir), { recursive: true });
-writeFileSync(outDir, text, "utf8");
+const outputTarget = process.env.MAKEFUN_OUTPUT_DIR ?? "/output/entry.txt";
+// MAKEFUN_OUTPUT_DIR is a directory (the grader sets it to /output); only
+// treat the value as a file path when it already names the entry file.
+const outPath = outputTarget.endsWith("entry.txt")
+  ? outputTarget
+  : join(outputTarget, "entry.txt");
+mkdirSync(dirname(outPath), { recursive: true });
+writeFileSync(outPath, text, "utf8");
 
-const roundTrip = readFileSync(outDir, "utf8");
+const roundTrip = readFileSync(outPath, "utf8");
 if (roundTrip !== text) {
   console.error("round-trip verification failed: output differs from entry");
   process.exit(1);
@@ -39,4 +44,4 @@ if (Buffer.byteLength(roundTrip, "utf8") !== Buffer.byteLength(text, "utf8")) {
   process.exit(1);
 }
 
-console.log(`wrote ${text.length} chars (${Buffer.byteLength(text, "utf8")} bytes) to ${outDir}`);
+console.log(`wrote ${text.length} chars (${Buffer.byteLength(text, "utf8")} bytes) to ${outPath} (round-trip verified)`);
